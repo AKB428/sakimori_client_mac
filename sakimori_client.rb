@@ -1,12 +1,15 @@
 require 'aws-sdk-core'
 require 'pp'
 
+config = open('./config/conf.json') do |io|
+  JSON.load(io)
+end
 
-@client_keyword = ARGV[0]
-@queue_url = ARGV[1]
-@image_folder = ARGV[2]
-@image_server_url = ARGV[3]
-@image_url_queue = ARGV[4]
+@client_keyword = config['client_keyword']
+@queue_url = config['queue_url']
+@image_folder = config['image_folder']
+@image_server_url = config['image_server_url']
+@image_url_queue = config['image_url_queue']
 
 def capture_and_send()
   filename = Time.now.strftime('%Y%m%d%H%M%S') + '.jpg'
@@ -14,9 +17,11 @@ def capture_and_send()
 
   system("imagesnap -q -w 1.5 #{filepath}")
 
-  #TODO send image_file_path
+  #send image_file
+  cmd = "curl --upload-file #{filepath} #{@image_server_url}"
 
-  #TODO return imageURL
+  puts cmd
+  `#{cmd}`
 end
 
 sqs = Aws::SQS::Client.new(region: 'us-east-1')
@@ -31,8 +36,10 @@ while true do
 
     image_url = capture_and_send()
 
-    #TODO
-    #SQS send_imageurl
+    #SQS image_url
+    sqs.send_message(
+        { queue_url: @image_url_queue, message_body: image_url
+        })
 
     sqs.delete_message({
       queue_url: @queue_url,
