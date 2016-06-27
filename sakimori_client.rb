@@ -27,6 +27,7 @@ end
 sqs = Aws::SQS::Client.new(region: 'us-east-1')
 
 while true do
+  begin
   msg = sqs.receive_message({
     queue_url: @queue_url,
     max_number_of_messages: 1
@@ -46,7 +47,12 @@ while true do
       receipt_handle: msg.messages[0].receipt_handle
     })
   end
-  sleep 3
+  rescue Errno::ENETDOWN => ex
+    p ex
+    sqs = Aws::SQS::Client.new(region: 'us-east-1')
+  ensure
+    sleep 3
+  end
 end
 
 
