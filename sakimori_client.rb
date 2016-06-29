@@ -47,8 +47,9 @@ while true do
       receipt_handle: msg.messages[0].receipt_handle
     })
   end
-  rescue Errno::ENETDOWN => ex
+  rescue Exception => ex
     p ex
+    sleep 30;
     sqs = Aws::SQS::Client.new(region: 'us-east-1')
   ensure
     sleep 3
