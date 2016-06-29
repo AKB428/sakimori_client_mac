@@ -28,25 +28,25 @@ sqs = Aws::SQS::Client.new(region: 'us-east-1')
 
 while true do
   begin
-  msg = sqs.receive_message({
-    queue_url: @queue_url,
-    max_number_of_messages: 1
-  })
-  if msg.messages[0] &&  msg.messages[0].body.start_with?(@client_keyword)
-    puts msg.messages[0].body
+    msg = sqs.receive_message({
+                                  queue_url: @queue_url,
+                                  max_number_of_messages: 1
+                              })
+    if msg.messages[0] &&  msg.messages[0].body.start_with?(@client_keyword)
+      puts msg.messages[0].body
 
-    image_url = capture_and_send()
+      image_url = capture_and_send()
 
-    #SQS image_url
-    sqs.send_message(
-        { queue_url: @image_url_queue, message_body: image_url
-        })
+      #SQS image_url
+      sqs.send_message(
+          { queue_url: @image_url_queue, message_body: image_url
+          })
 
-    sqs.delete_message({
-      queue_url: @queue_url,
-      receipt_handle: msg.messages[0].receipt_handle
-    })
-  end
+      sqs.delete_message({
+                             queue_url: @queue_url,
+                             receipt_handle: msg.messages[0].receipt_handle
+                         })
+    end
   rescue Exception => ex
     p ex
     sleep 30;
